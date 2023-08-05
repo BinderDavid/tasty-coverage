@@ -1,5 +1,6 @@
-# tasty-test
-Try out some stuff with tasty
+# tasty-coverage
+
+A [tasty](https://hackage.haskell.org/package/tasty) ingredient which allows to generate per-test coverage data.
 
 ```console
 > cabal run tasty-test-test -- --help
