@@ -24,20 +24,9 @@ library
     build-depends:    base ^>=4.18.0.0,
                       tasty ^>= 1.4,
                       optparse-applicative ^>= 0.18,
-                      hpc ^>= 0.6
+                      hpc ^>= 0.6,
+                      filepath ^>= 1.4.100
     hs-source-dirs:   src
-    default-language: Haskell2010
-
-executable tasty-test
-    import:           warnings
-    main-is:          Main.hs
-    -- other-modules:
-    -- other-extensions:
-    build-depends:
-        base ^>=4.18.0.0,
-        tasty-test
-
-    hs-source-dirs:   app
     default-language: Haskell2010
 
 test-suite tasty-test-test

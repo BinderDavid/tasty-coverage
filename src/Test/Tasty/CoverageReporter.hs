@@ -10,6 +10,8 @@ import Data.Typeable
 import Options.Applicative
 import Trace.Hpc.Reflect
 import Trace.Hpc.Tix
+import Data.List
+import System.FilePath
 
 newtype ReportCoverage = MkReportCoverage   Bool
   deriving (Eq, Ord, Typeable)
@@ -23,6 +25,8 @@ instance IsOption ReportCoverage where
     optionCLParser = mkFlagCLParser (short 'c') (MkReportCoverage True)
 
 
+tixDir :: FilePath
+tixDir = "tix"
 
 -- | Obtain the list of all tests in the suite
 testNames :: OptionSet -> TestTree -> IO ()
@@ -35,10 +39,15 @@ coverageFold = trivialFold
         clearTix
         result <- run opts test (\_ -> pure ())
         tix <- examineTix
-        writeTix (name <> ".tix") tix
+        let filepath = tixFilePath name (hasPassed result)
+        writeTix filepath tix
         putStrLn (show result)
         pure () 
         }
+
+tixFilePath :: TestName -> Bool -> FilePath
+tixFilePath tn True  = tixDir </> tn <.> "PASSED" <.> ".tix"
+tixFilePath tn False = tixDir </> tn <.> "FAILED" <.> ".tix"
 
 coverageReporter :: Ingredient
 coverageReporter = TestManager coverageOptions coverageRunner
@@ -52,3 +61,8 @@ coverageRunner opts tree = case lookupOption opts of
   MkReportCoverage True -> Just $ do
     testNames opts tree
     pure True
+
+-- Hacky Hacky Hacky
+hasPassed :: Result -> Bool
+hasPassed res = "Result {resultOutcome = Success" `isPrefixOf` (show res)
+  
