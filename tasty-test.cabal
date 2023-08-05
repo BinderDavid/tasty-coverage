@@ -18,10 +18,11 @@ common warnings
 
 library
     import:           warnings
-    exposed-modules:  MyLib
+    exposed-modules:  Test.Tasty.CoverageReporter
     -- other-modules:
     -- other-extensions:
-    build-depends:    base ^>=4.18.0.0
+    build-depends:    base ^>=4.18.0.0,
+                      tasty ^>= 1.4,
     hs-source-dirs:   src
     default-language: Haskell2010
 

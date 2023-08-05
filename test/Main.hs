@@ -2,9 +2,10 @@ module Main (main) where
 
 import Test.Tasty
 import Test.Tasty.HUnit
+import Test.Tasty.CoverageReporter
 
 main :: IO ()
-main = defaultMain tests
+main = defaultMainWithIngredients [coverageReporter] tests
 
 tests :: TestTree
 tests = testGroup "UnitTests" [
