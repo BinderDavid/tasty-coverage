@@ -7,7 +7,6 @@ import Test.Tasty.Options
 import Test.Tasty.Runners
 import Test.Tasty.Providers
 import Data.Typeable
-import qualified Options.Applicative as P
 import Trace.Hpc.Reflect ( clearTix, examineTix )
 import Trace.Hpc.Tix ( writeTix )
 import System.FilePath ( (<.>), (</>) )
@@ -25,7 +24,7 @@ instance IsOption ReportCoverage where
     parseValue = fmap MkReportCoverage . safeReadBool
     optionName = pure "report-coverage"
     optionHelp = pure "Generate per-test coverage data"
-    optionCLParser = mkFlagCLParser (P.short 'c') (MkReportCoverage True)
+    optionCLParser = mkFlagCLParser mempty (MkReportCoverage True)
 
 
 tixDir :: FilePath

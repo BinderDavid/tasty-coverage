@@ -37,7 +37,6 @@ library
     build-depends:
         base >=4.16 && <4.20,
         tasty ^>=1.4,
-        optparse-applicative ^>=0.18,
         hpc ^>=0.6,
         filepath ^>=1.4.100
 
