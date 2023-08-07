@@ -1,5 +1,5 @@
 # Revision history for tasty-test
 
-## 0.1.0.0 -- YYYY-mm-dd
+## 0.1.0.0 -- 2023-08-07
 
-* First version. Released on an unsuspecting world.
+* Release of first version on Hackage
