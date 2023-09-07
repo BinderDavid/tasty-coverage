@@ -8,7 +8,7 @@ import Test.Tasty.Runners
 import Test.Tasty.Providers
 import Data.Typeable
 import Trace.Hpc.Reflect ( clearTix, examineTix )
-import Trace.Hpc.Tix ( writeTix )
+import Trace.Hpc.Tix ( writeTix, Tix(..), TixModule(..) )
 import System.FilePath ( (<.>), (</>) )
 import Control.Monad (forM_)
 import qualified Data.List.NonEmpty as NE
@@ -16,7 +16,7 @@ import Data.List.NonEmpty ( NonEmpty )
 import Data.Foldable (fold)
 import Data.Bifunctor (first)
 
-newtype ReportCoverage = MkReportCoverage   Bool
+newtype ReportCoverage = MkReportCoverage Bool
   deriving (Eq, Ord, Typeable)
 
 instance IsOption ReportCoverage where
@@ -25,6 +25,21 @@ instance IsOption ReportCoverage where
     optionName = pure "report-coverage"
     optionHelp = pure "Generate per-test coverage data"
     optionCLParser = mkFlagCLParser mempty (MkReportCoverage True)
+
+newtype RemoveTixHash = MkRemoveTixHash Bool
+  deriving (Eq, Ord, Typeable)
+
+instance IsOption RemoveTixHash where
+  defaultValue = MkRemoveTixHash False
+  parseValue = fmap MkRemoveTixHash . safeReadBool
+  optionName = pure "remove-tix-hash"
+  optionHelp = pure "Remove hash from tix file (used for golden tests)"
+  optionCLParser = mkFlagCLParser mempty (MkRemoveTixHash True)
+
+coverageOptions :: [OptionDescription]
+coverageOptions = [ Option (Proxy :: Proxy ReportCoverage)
+                  , Option (Proxy :: Proxy RemoveTixHash)
+                  ]
 
 
 tixDir :: FilePath
@@ -46,7 +61,7 @@ coverageFold = trivialFold
                 result <- run opts test (\_ -> pure ())
                 tix <- examineTix
                 let filepath = tixFilePath n result
-                writeTix filepath tix
+                writeTix filepath (removeHash opts tix)
                 putStrLn ("Wrote coverage file: " <> filepath)
           pure (NE.singleton name, f),
           -- Append the name of the testgroup to the list of TestNames
@@ -60,8 +75,6 @@ tixFilePath tn Result { resultOutcome = Failure _ } = tixDir </> tn <.> "FAILED"
 coverageReporter :: Ingredient
 coverageReporter = TestManager coverageOptions coverageRunner
 
-coverageOptions :: [OptionDescription]
-coverageOptions = [Option (Proxy :: Proxy ReportCoverage)]
 
 coverageRunner :: OptionSet -> TestTree -> Maybe (IO Bool)
 coverageRunner opts tree = case lookupOption opts of
@@ -70,4 +83,11 @@ coverageRunner opts tree = case lookupOption opts of
     testNames opts tree
     pure True
 
-  
+removeHash :: OptionSet -> Tix -> Tix
+removeHash opts (Tix txs) = case lookupOption opts of
+  MkRemoveTixHash False -> Tix txs
+  MkRemoveTixHash True -> Tix (fmap removeHashModule txs)
+
+removeHashModule :: TixModule -> TixModule
+removeHashModule (TixModule name _hash i is) = TixModule name 0 i is
+
