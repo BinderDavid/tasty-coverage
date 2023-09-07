@@ -1,4 +1,4 @@
-{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE InstanceSigs, NamedFieldPuns #-}
 module Test.Tasty.CoverageReporter (coverageReporter) where
 
 import Test.Tasty
@@ -54,8 +54,17 @@ coverageFold = trivialFold
         }
 
 tixFilePath :: TestName -> Result -> FilePath
-tixFilePath tn Result { resultOutcome = Success }  = tixDir </> tn <.> "PASSED" <.> ".tix"
-tixFilePath tn Result { resultOutcome = Failure _ } = tixDir </> tn <.> "FAILED" <.> ".tix"
+tixFilePath tn Result { resultOutcome }  =
+  tixDir </> generateValidFilepath tn <.> outcomeSuffix resultOutcome <.> ".tix"
+
+-- | We want to compute the file suffix that we use to distinguish
+-- tix files for failing and succeeding tests.
+outcomeSuffix :: Outcome -> String
+outcomeSuffix Success = "PASSED"
+outcomeSuffix (Failure TestFailed) = "FAILED"
+outcomeSuffix (Failure (TestThrewException _)) = "EXCEPTION"
+outcomeSuffix (Failure (TestTimedOut _)) = "TIMEOUT"
+outcomeSuffix (Failure TestDepFailed) = "SKIPPED"
 
 coverageReporter :: Ingredient
 coverageReporter = TestManager coverageOptions coverageRunner
@@ -70,4 +79,14 @@ coverageRunner opts tree = case lookupOption opts of
     testNames opts tree
     pure True
 
+-- | Removes all path separators from the input String in order
+-- to generate a valid filepath.
+-- The names of some tests contain path separators, so we have to
+-- remove them.
+generateValidFilepath :: String -> FilePath
+generateValidFilepath = filter (\c -> c `notElem` pathSeparators)
+  where
+    -- Include both Windows and Posix, so that generated .tix files
+    -- are consistent among systems.
+    pathSeparators = ['\\','/']
   
