@@ -1,6 +1,6 @@
 cabal-version:   3.0
 name:            tasty-coverage
-version:         0.1.1.0
+version:         0.1.2.0
 license:         BSD-3-Clause
 license-file:    LICENSE
 copyright:       David Binder, 2023
@@ -31,7 +31,7 @@ common deps
     build-depends:
         base >=4.16 && <4.20,
         tasty >= 1.4 && < 1.6
-        
+
 library
     import:           deps
     exposed-modules:  Test.Tasty.CoverageReporter
@@ -41,7 +41,7 @@ library
     build-depends:
         filepath >=1.3.8 && <=1.5,
         hpc >=0.6 && <0.8,
-        
+
 
 executable tasty-coverage-example
     import:           deps
@@ -65,4 +65,3 @@ test-suite tasty-coverage-test
         filepath >=1.3.8 && <=1.5,
         tasty-golden ^>=2.3,
         process ^>=1.6,
-        

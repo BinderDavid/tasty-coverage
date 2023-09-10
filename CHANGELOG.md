@@ -1,6 +1,6 @@
 # Revision history for tasty-test
 
-## Unreleased
+## 0.1.2.0 -- 2023-09-10
 
 * Add compatibility with Tasty 1.5
 * Add `--tix-dir` flag for specifying directory for tix files.
