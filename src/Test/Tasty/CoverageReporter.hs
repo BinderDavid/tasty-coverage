@@ -2,6 +2,12 @@
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE NamedFieldPuns #-}
 
+-- |
+-- Module         : Test.Tasty.CoverageReporter
+-- Description    : Ingredient for producing per-test coverage reports
+--
+-- This module provides an ingredient for the tasty framework which allows
+-- to generate one coverage file per individual test.
 module Test.Tasty.CoverageReporter (coverageReporter) where
 
 import Control.Monad (forM_)
@@ -18,6 +24,10 @@ import Test.Tasty.Providers
 import Test.Tasty.Runners
 import Trace.Hpc.Reflect (clearTix, examineTix)
 import Trace.Hpc.Tix (Tix (..), TixModule (..), writeTix)
+
+-------------------------------------------------------------------------------
+-- Options
+-------------------------------------------------------------------------------
 
 newtype ReportCoverage = MkReportCoverage Bool
   deriving (Eq, Ord, Typeable)
@@ -44,6 +54,10 @@ coverageOptions =
   [ Option (Proxy :: Proxy ReportCoverage),
     Option (Proxy :: Proxy RemoveTixHash)
   ]
+
+-------------------------------------------------------------------------------
+-- coverageReporter Ingredient
+-------------------------------------------------------------------------------
 
 tixDir :: FilePath
 tixDir = "tix"
@@ -93,6 +107,12 @@ outcomeSuffix (Failure (TestThrewException _)) = "EXCEPTION"
 outcomeSuffix (Failure (TestTimedOut _)) = "TIMEOUT"
 outcomeSuffix (Failure TestDepFailed) = "SKIPPED"
 
+-- | This ingredient implements its own test-runner which can be executed with
+-- the @--report-coverage@ command line option.
+-- The testrunner executes the tests sequentially and emits one coverage file
+-- per executed test.
+--
+-- @since 0.1.0.0
 coverageReporter :: Ingredient
 coverageReporter = TestManager coverageOptions coverageRunner
 
