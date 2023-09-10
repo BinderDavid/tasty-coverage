@@ -1,9 +1,9 @@
 module Main (main) where
 
-import Test.Tasty ( defaultMain, testGroup, TestTree )
-import Test.Tasty.Golden ( goldenVsFileDiff )
-import System.Process (callCommand)
 import System.FilePath
+import System.Process (callCommand)
+import Test.Tasty (TestTree, defaultMain, testGroup)
+import Test.Tasty.Golden (goldenVsFileDiff)
 
 goldenDir :: FilePath
 goldenDir = "test" </> "golden"
