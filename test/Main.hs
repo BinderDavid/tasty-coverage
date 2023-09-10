@@ -19,7 +19,7 @@ runExample :: IO ()
 runExample = callCommand "tasty-coverage-example --report-coverage --remove-tix-hash"
 
 tests :: TestTree
-tests = testGroup "GoldenTests" [test1, test2, test3]
+tests = testGroup "GoldenTests" [test1, test2, test3, test4]
 
 test1 :: TestTree
 test1 = goldenVsFileDiff "testOne" diffCmd (goldenDir </> example <.> "golden") (tixDir </> example) runExample
@@ -35,6 +35,11 @@ test3 :: TestTree
 test3 = goldenVsFileDiff "testThree" diffCmd (goldenDir </> example <.> "golden") (tixDir </> example) runExample
   where
     example = "UnitTests.testThree.FAILED.tix"
+
+test4 :: TestTree
+test4 = goldenVsFileDiff "testFour" diffCmd (goldenDir </> example <.> "golden") (tixDir </> example) runExample
+  where
+    example = "UnitTests.testFour.FAILED.tix"
 
 diffCmd :: FilePath -> FilePath -> [String]
 diffCmd ref new = ["diff", ref, new]
