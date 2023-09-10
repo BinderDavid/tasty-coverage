@@ -1,13 +1,13 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE NamedFieldPuns #-}
-{- |
-Module         : Test.Tasty.CoverageReporter
-Description    : Ingredient for producing per-test coverage reports
 
-This module provides an ingredient for the tasty framework which allows
-to generate one coverage file per individual test.
--}
+-- |
+-- Module         : Test.Tasty.CoverageReporter
+-- Description    : Ingredient for producing per-test coverage reports
+--
+-- This module provides an ingredient for the tasty framework which allows
+-- to generate one coverage file per individual test.
 module Test.Tasty.CoverageReporter (coverageReporter) where
 
 import Control.Monad (forM_)
@@ -111,7 +111,7 @@ outcomeSuffix (Failure TestDepFailed) = "SKIPPED"
 -- the @--report-coverage@ command line option.
 -- The testrunner executes the tests sequentially and emits one coverage file
 -- per executed test.
--- 
+--
 -- @since 0.1.0.0
 coverageReporter :: Ingredient
 coverageReporter = TestManager coverageOptions coverageRunner
