@@ -13,5 +13,7 @@ tests =
     "UnitTests"
     [ testCase "testOne" (True @=? True),
       testCase "testTwo" (2 @=? (2 :: Int)),
-      testCase "testThree" (2 @=? (3 :: Int))
+      testCase "testThree" (2 @=? (3 :: Int)),
+      -- The path separator should be removed in the name of the file
+      testCase "test/Four" (2 @=? (3 :: Int))
     ]
