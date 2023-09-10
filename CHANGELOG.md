@@ -1,5 +1,9 @@
 # Revision history for tasty-test
 
+## Unreleased
+
+* Add compatibility with Tasty 1.5
+
 ## 0.1.1.0 -- 2023-09-07
 
 * Be more specific with the file suffixes which are computed from the test outcome. Previously only "PASSED" and "FAILED" were used. We now also use "EXCEPTION", "TIMEOUT" and "SKIPPED".

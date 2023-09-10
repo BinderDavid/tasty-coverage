@@ -1,4 +1,4 @@
-{-# LANGUAGE InstanceSigs, NamedFieldPuns #-}
+{-# LANGUAGE InstanceSigs, NamedFieldPuns, CPP #-}
 module Test.Tasty.CoverageReporter (coverageReporter) where
 
 import Test.Tasty
@@ -49,10 +49,19 @@ tixDir = "tix"
 testNames :: OptionSet -> TestTree -> IO ()
 testNames  os tree = forM_ (foldTestTree coverageFold os tree) $ \(s,f) -> f (fold (NE.intersperse "." s))
 
+type FoldResult = [(NonEmpty TestName, String -> IO ())]
+
+#if MIN_VERSION_tasty(1,5,0)
+groupFold :: OptionSet -> TestName -> [FoldResult] -> FoldResult
+groupFold _ groupName acc = fmap (first (NE.cons groupName)) (concat acc)
+#else
+groupFold :: OptionSet -> TestName -> FoldResult -> FoldResult
+groupFold _ groupName acc = fmap (first (NE.cons groupName)) acc
+#endif
 
 
 -- | Collect all tests and
-coverageFold :: TreeFold [(NonEmpty TestName, String -> IO ())]
+coverageFold :: TreeFold FoldResult
 coverageFold = trivialFold
        { foldSingle = \opts name test -> do
           let f n = do
@@ -65,7 +74,7 @@ coverageFold = trivialFold
                 putStrLn ("Wrote coverage file: " <> filepath)
           pure (NE.singleton name, f),
           -- Append the name of the testgroup to the list of TestNames
-          foldGroup = \_ groupName acc -> fmap (first (NE.cons groupName)) acc
+          foldGroup = groupFold
         }
 
 tixFilePath :: TestName -> Result -> FilePath
