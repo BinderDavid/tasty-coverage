@@ -1,7 +1,7 @@
 name: fourmolu
 on:
   - push
-  - pullrequest
+  - pull_request
 jobs:
   format:
     runs-on: ubuntu-latest
