@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Add compatibility with Tasty 1.5
+* Add `--tix-dir` flag for specifying directory for tix files.
 
 ## 0.1.1.0 -- 2023-09-07
 

@@ -49,18 +49,25 @@ instance IsOption RemoveTixHash where
   optionHelp = pure "Remove hash from tix file (used for golden tests)"
   optionCLParser = mkFlagCLParser mempty (MkRemoveTixHash True)
 
+newtype TixDir = MkTixDir FilePath
+
+instance IsOption TixDir where
+  defaultValue = MkTixDir "tix"
+  parseValue str = Just (MkTixDir str)
+  optionName = pure "tix-dir"
+  optionHelp = pure "Specify directory for generated tix files"
+  showDefaultValue (MkTixDir dir) = Just dir
+
 coverageOptions :: [OptionDescription]
 coverageOptions =
   [ Option (Proxy :: Proxy ReportCoverage),
-    Option (Proxy :: Proxy RemoveTixHash)
+    Option (Proxy :: Proxy RemoveTixHash),
+    Option (Proxy :: Proxy TixDir)
   ]
 
 -------------------------------------------------------------------------------
 -- coverageReporter Ingredient
 -------------------------------------------------------------------------------
-
-tixDir :: FilePath
-tixDir = "tix"
 
 -- | Obtain the list of all tests in the suite
 testNames :: OptionSet -> TestTree -> IO ()
@@ -86,7 +93,7 @@ coverageFold =
               clearTix
               result <- run opts test (\_ -> pure ())
               tix <- examineTix
-              let filepath = tixFilePath n result
+              let filepath = tixFilePath opts n result
               writeTix filepath (removeHash opts tix)
               putStrLn ("Wrote coverage file: " <> filepath)
         pure (NE.singleton name, f),
@@ -94,9 +101,9 @@ coverageFold =
       foldGroup = groupFold
     }
 
-tixFilePath :: TestName -> Result -> FilePath
-tixFilePath tn Result {resultOutcome} =
-  tixDir </> generateValidFilepath tn <.> outcomeSuffix resultOutcome <.> ".tix"
+tixFilePath :: OptionSet -> TestName -> Result -> FilePath
+tixFilePath opts tn Result {resultOutcome} = case lookupOption opts of
+  MkTixDir tixDir -> tixDir </> generateValidFilepath tn <.> outcomeSuffix resultOutcome <.> ".tix"
 
 -- | We want to compute the file suffix that we use to distinguish
 -- tix files for failing and succeeding tests.
