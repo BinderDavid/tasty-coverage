@@ -10,7 +10,6 @@
 -- to generate one coverage file per individual test.
 module Test.Tasty.CoverageReporter (coverageReporter) where
 
-import Control.Monad (forM_)
 import Data.Bifunctor (first)
 import Data.Foldable (fold)
 import Data.List.NonEmpty (NonEmpty)
@@ -66,12 +65,8 @@ coverageOptions =
   ]
 
 -------------------------------------------------------------------------------
--- coverageReporter Ingredient
+-- Collect the tests
 -------------------------------------------------------------------------------
-
--- | Obtain the list of all tests in the suite
-testNames :: OptionSet -> TestTree -> IO ()
-testNames os tree = forM_ (foldTestTree coverageFold os tree) $ \(s, f) -> f (fold (NE.intersperse "." s))
 
 type FoldResult = [(NonEmpty TestName, String -> IO ())]
 
@@ -114,6 +109,44 @@ outcomeSuffix (Failure (TestThrewException _)) = "EXCEPTION"
 outcomeSuffix (Failure (TestTimedOut _)) = "TIMEOUT"
 outcomeSuffix (Failure TestDepFailed) = "SKIPPED"
 
+collectTests :: OptionSet -> TestTree -> FoldResult
+collectTests os tree = foldTestTree coverageFold os tree
+
+-------------------------------------------------------------------------------
+-- Execute the tests
+-------------------------------------------------------------------------------
+
+-- | Execute the tests
+executeTests :: OptionSet -> TestTree -> IO ()
+executeTests os tree = go [] (collectTests os tree)
+  where
+    go :: [String] -> [(NonEmpty TestName, String -> IO ())] -> IO ()
+    go _ [] = pure ()
+    go seen (t : ts) = do
+      seen' <- executeTest seen t
+      go seen' ts
+
+-- | Execute a single test
+executeTest ::
+  -- | The testnames we have already seen.
+  [String] ->
+  -- | The test we are currently processing
+  (NonEmpty String, (String -> IO ())) ->
+  IO [String]
+executeTest seen (s, f) = do
+  let testname = fold (NE.intersperse "." s)
+  let (seen', fresh) = freshName seen testname
+  if fresh /= testname
+    then putStrLn $ "Warning: Test " <> testname <> " is duplicated."
+    else pure ()
+  f fresh
+  pure seen'
+
+freshName :: [String] -> String -> ([String], String)
+freshName seen name
+  | name `elem` seen = freshName seen (name <> "'")
+  | otherwise = (name : seen, name)
+
 -- | This ingredient implements its own test-runner which can be executed with
 -- the @--report-coverage@ command line option.
 -- The testrunner executes the tests sequentially and emits one coverage file
@@ -127,7 +160,7 @@ coverageRunner :: OptionSet -> TestTree -> Maybe (IO Bool)
 coverageRunner opts tree = case lookupOption opts of
   MkReportCoverage False -> Nothing
   MkReportCoverage True -> Just $ do
-    testNames opts tree
+    executeTests opts tree
     pure True
 
 -- | Removes all path separators from the input String in order
