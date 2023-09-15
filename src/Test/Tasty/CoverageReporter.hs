@@ -10,10 +10,12 @@
 -- to generate one coverage file per individual test.
 module Test.Tasty.CoverageReporter (coverageReporter) where
 
+import Control.Monad (when)
 import Data.Bifunctor (first)
 import Data.Foldable (fold)
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as NE
+import qualified Data.Set as S
 import Data.Typeable
 import System.FilePath ((<.>), (</>))
 import Test.Tasty
@@ -110,42 +112,50 @@ outcomeSuffix (Failure (TestTimedOut _)) = "TIMEOUT"
 outcomeSuffix (Failure TestDepFailed) = "SKIPPED"
 
 collectTests :: OptionSet -> TestTree -> FoldResult
-collectTests os tree = foldTestTree coverageFold os tree
+collectTests = foldTestTree coverageFold
 
 -------------------------------------------------------------------------------
 -- Execute the tests
 -------------------------------------------------------------------------------
 
+-- | A fresh name generator which collects names we have encountered before.
+newtype NameGenerator = MkNameGenerator {seenNames :: S.Set String}
+
+emptyNameGenerator :: NameGenerator
+emptyNameGenerator = MkNameGenerator {seenNames = S.empty}
+
+-- | Check if the name is already used, and insert ticks until the name is fresh.
+-- Returns the name generator extended with the newly generated name.
+freshName :: NameGenerator -> String -> (NameGenerator, String)
+freshName ng@MkNameGenerator {seenNames} name
+  | name `S.member` seenNames = freshName ng (name <> "'")
+  | otherwise = (MkNameGenerator (S.insert name seenNames), name)
+
 -- | Execute the tests
 executeTests :: OptionSet -> TestTree -> IO ()
-executeTests os tree = go [] (collectTests os tree)
+executeTests os tree = go emptyNameGenerator (collectTests os tree)
   where
-    go :: [String] -> [(NonEmpty TestName, String -> IO ())] -> IO ()
+    go :: NameGenerator -> [(NonEmpty TestName, String -> IO ())] -> IO ()
     go _ [] = pure ()
-    go seen (t : ts) = do
-      seen' <- executeTest seen t
-      go seen' ts
+    go ng (t : ts) = do
+      ng' <- executeTest ng t
+      go ng' ts
 
 -- | Execute a single test
 executeTest ::
   -- | The testnames we have already seen.
-  [String] ->
+  NameGenerator ->
   -- | The test we are currently processing
-  (NonEmpty String, (String -> IO ())) ->
-  IO [String]
+  (NonEmpty String, String -> IO ()) ->
+  IO NameGenerator
 executeTest seen (s, f) = do
   let testname = fold (NE.intersperse "." s)
   let (seen', fresh) = freshName seen testname
-  if fresh /= testname
-    then putStrLn $ "Warning: Test " <> testname <> " is duplicated."
-    else pure ()
+  when (fresh /= testname) $
+    putStrLn $
+      "Warning: Test " <> testname <> " is duplicated."
   f fresh
   pure seen'
-
-freshName :: [String] -> String -> ([String], String)
-freshName seen name
-  | name `elem` seen = freshName seen (name <> "'")
-  | otherwise = (name : seen, name)
 
 -- | This ingredient implements its own test-runner which can be executed with
 -- the @--report-coverage@ command line option.
