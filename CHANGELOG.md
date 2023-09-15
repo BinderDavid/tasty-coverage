@@ -1,5 +1,9 @@
 # Revision history for tasty-test
 
+## Unreleased
+
+* If multiple tests with exactly the same name occur in the testsuite, then we generate new filenames by appending tick-marks to the later tests until the name is unique.
+
 ## 0.1.2.0 -- 2023-09-10
 
 * Add compatibility with Tasty 1.5
