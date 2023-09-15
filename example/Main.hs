@@ -15,5 +15,10 @@ tests =
       testCase "testTwo" (2 @=? (2 :: Int)),
       testCase "testThree" (2 @=? (3 :: Int)),
       -- The path separator should be removed in the name of the file
-      testCase "test/Four" (2 @=? (3 :: Int))
+      testCase "test/Four" (2 @=? (3 :: Int)),
+      -- The following two tests have the same name,
+      -- the generated coverage files should have
+      -- names `testFive` and `testfive'`
+      testCase "testFive" (2 @=? (2 :: Int)),
+      testCase "testFive" (2 @=? (2 :: Int))
     ]

@@ -10,11 +10,12 @@
 -- to generate one coverage file per individual test.
 module Test.Tasty.CoverageReporter (coverageReporter) where
 
-import Control.Monad (forM_)
+import Control.Monad (when)
 import Data.Bifunctor (first)
 import Data.Foldable (fold)
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as NE
+import qualified Data.Set as S
 import Data.Typeable
 import System.FilePath ((<.>), (</>))
 import Test.Tasty
@@ -66,12 +67,8 @@ coverageOptions =
   ]
 
 -------------------------------------------------------------------------------
--- coverageReporter Ingredient
+-- Collect the tests
 -------------------------------------------------------------------------------
-
--- | Obtain the list of all tests in the suite
-testNames :: OptionSet -> TestTree -> IO ()
-testNames os tree = forM_ (foldTestTree coverageFold os tree) $ \(s, f) -> f (fold (NE.intersperse "." s))
 
 type FoldResult = [(NonEmpty TestName, String -> IO ())]
 
@@ -114,6 +111,52 @@ outcomeSuffix (Failure (TestThrewException _)) = "EXCEPTION"
 outcomeSuffix (Failure (TestTimedOut _)) = "TIMEOUT"
 outcomeSuffix (Failure TestDepFailed) = "SKIPPED"
 
+collectTests :: OptionSet -> TestTree -> FoldResult
+collectTests = foldTestTree coverageFold
+
+-------------------------------------------------------------------------------
+-- Execute the tests
+-------------------------------------------------------------------------------
+
+-- | A fresh name generator which collects names we have encountered before.
+newtype NameGenerator = MkNameGenerator {seenNames :: S.Set String}
+
+emptyNameGenerator :: NameGenerator
+emptyNameGenerator = MkNameGenerator {seenNames = S.empty}
+
+-- | Check if the name is already used, and insert ticks until the name is fresh.
+-- Returns the name generator extended with the newly generated name.
+freshName :: NameGenerator -> String -> (NameGenerator, String)
+freshName ng@MkNameGenerator {seenNames} name
+  | name `S.member` seenNames = freshName ng (name <> "'")
+  | otherwise = (MkNameGenerator (S.insert name seenNames), name)
+
+-- | Execute the tests
+executeTests :: OptionSet -> TestTree -> IO ()
+executeTests os tree = go emptyNameGenerator (collectTests os tree)
+  where
+    go :: NameGenerator -> [(NonEmpty TestName, String -> IO ())] -> IO ()
+    go _ [] = pure ()
+    go ng (t : ts) = do
+      ng' <- executeTest ng t
+      go ng' ts
+
+-- | Execute a single test
+executeTest ::
+  -- | The testnames we have already seen.
+  NameGenerator ->
+  -- | The test we are currently processing
+  (NonEmpty String, String -> IO ()) ->
+  IO NameGenerator
+executeTest seen (s, f) = do
+  let testname = fold (NE.intersperse "." s)
+  let (seen', fresh) = freshName seen testname
+  when (fresh /= testname) $
+    putStrLn $
+      "Warning: Test " <> testname <> " is duplicated."
+  f fresh
+  pure seen'
+
 -- | This ingredient implements its own test-runner which can be executed with
 -- the @--report-coverage@ command line option.
 -- The testrunner executes the tests sequentially and emits one coverage file
@@ -127,7 +170,7 @@ coverageRunner :: OptionSet -> TestTree -> Maybe (IO Bool)
 coverageRunner opts tree = case lookupOption opts of
   MkReportCoverage False -> Nothing
   MkReportCoverage True -> Just $ do
-    testNames opts tree
+    executeTests opts tree
     pure True
 
 -- | Removes all path separators from the input String in order
