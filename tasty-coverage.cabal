@@ -14,7 +14,7 @@ synopsis:
 
 description:
     An ingredient for the tasty testing framework which allows to generate per-test coverage reports.
-    For every test "foo" a file "foo.PASSED.tix" or "foo.FAILED.tix" is generated, depending on whether the test passed or failed. 
+    For every test "foo" a file "foo.PASSED.tix" or "foo.FAILED.tix" is generated, depending on whether the test passed or failed.
 
 category:        Testing
 build-type:      Simple
@@ -43,13 +43,20 @@ library
         hpc >=0.6 && <0.8,
         containers >=0.6 && <0.7,
 
+flag coverage {
+  Description: Enable coverage
+  Default:     False
+  Manual:      False
+}
 
 executable tasty-coverage-example
     import:           deps
     main-is:          Main.hs
     hs-source-dirs:   example
     default-language: Haskell2010
-    ghc-options:      -Wall -fhpc
+    ghc-options:      -Wall
+    if flag(coverage)
+        ghc-options:  -fhpc
     build-depends:
         tasty-hunit ^>=0.10,
         tasty-coverage
@@ -61,6 +68,11 @@ test-suite tasty-coverage-test
     build-tool-depends: tasty-coverage:tasty-coverage-example
     hs-source-dirs:     test
     default-language:   Haskell2010
+    -- Since "coverage" is an automatic flag, the following forces
+    -- the flag to be enabled if we are trying to build this component.
+    -- Cf.: https://github.com/haskell/cabal/issues/9251
+    if !flag(coverage)
+       build-depends: base < 0
     ghc-options:        -Wall
     build-depends:
         filepath >=1.3.8 && <=1.5,
