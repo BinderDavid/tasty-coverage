@@ -1,5 +1,10 @@
 # Revision history for tasty-test
 
+## Unreleased
+
+* Warn if the examined tix files are empty. This is usually an indication that the user forgot to enable the -fhpc flag.
+
+
 ## 0.1.3.0 -- 2023-09-15
 
 * If multiple tests with exactly the same name occur in the testsuite, then we generate new filenames by appending tick-marks to the later tests until the name is unique.

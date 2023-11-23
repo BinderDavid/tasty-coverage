@@ -18,6 +18,7 @@ import qualified Data.List.NonEmpty as NE
 import qualified Data.Set as S
 import Data.Typeable
 import System.FilePath ((<.>), (</>))
+import System.IO (hPutStrLn, stderr)
 import Test.Tasty
 import Test.Tasty.Ingredients
 import Test.Tasty.Options
@@ -80,6 +81,10 @@ groupFold :: OptionSet -> TestName -> FoldResult -> FoldResult
 groupFold _ groupName acc = fmap (first (NE.cons groupName)) acc
 #endif
 
+isEmptyTix :: Tix -> Bool
+isEmptyTix (Tix []) = True
+isEmptyTix _ = False
+
 -- | Collect all tests and
 coverageFold :: TreeFold FoldResult
 coverageFold =
@@ -90,6 +95,8 @@ coverageFold =
               clearTix
               result <- run opts test (\_ -> pure ())
               tix <- examineTix
+              when (isEmptyTix tix) $ do
+                hPutStrLn stderr "Warning: Tix file is empty. Make sure to run the testsuite with -fhpc enabled."
               let filepath = tixFilePath opts n result
               writeTix filepath (removeHash opts tix)
               putStrLn ("Wrote coverage file: " <> filepath)
