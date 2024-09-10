@@ -18,7 +18,7 @@ tests =
       testCase "test/Four" (2 @=? (3 :: Int)),
       -- The following two tests have the same name,
       -- the generated coverage files should have
-      -- names `testFive` and `testfive'`
+      -- names `testFive` and `testFive'`
       testCase "testFive" (2 @=? (2 :: Int)),
       testCase "testFive" (2 @=? (2 :: Int))
     ]
