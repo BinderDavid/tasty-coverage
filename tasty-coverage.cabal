@@ -6,7 +6,7 @@ license-file:    LICENSE
 copyright:       David Binder, 2023
 maintainer:      david.binder@uni-tuebingen.de
 author:          David Binder
-tested-with:     ghc ==9.2.7 || ==9.4.5 || ==9.6.2 || ==9.8.2 || == 9.10.1
+tested-with:     ghc ==9.2.7 || ==9.4.5 || ==9.6.2 || ==9.8.2 || ==9.10.1
 homepage:        https://github.com/BinderDavid/tasty-coverage
 bug-reports:     https://github.com/BinderDavid/tasty-coverage/issues
 synopsis:
@@ -76,6 +76,6 @@ test-suite tasty-coverage-test
     ghc-options:        -Wall
     build-depends:
         filepath >=1.3.8 && <=1.5,
-        hpc ^>=0.7,
+        hpc >=0.6 && < 0.8,
         tasty-hunit ^>=0.10,
         process ^>=1.6,
