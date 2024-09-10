@@ -1,7 +1,8 @@
 # Revision history for tasty-test
 
-## Unreleased
+## 0.1.4.0 -- 2024-09-10
 
+* Bump dependencies to be compatible with GHC 9.10
 * Warn if the examined tix files are empty. This is usually an indication that the user forgot to enable the -fhpc flag. [#17](https://github.com/BinderDavid/tasty-coverage/pull/17)
 
 
