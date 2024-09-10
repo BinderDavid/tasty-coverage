@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-* Warn if the examined tix files are empty. This is usually an indication that the user forgot to enable the -fhpc flag.
+* Warn if the examined tix files are empty. This is usually an indication that the user forgot to enable the -fhpc flag. [#17](https://github.com/BinderDavid/tasty-coverage/pull/17)
 
 
 ## 0.1.3.0 -- 2023-09-15
