@@ -23,6 +23,15 @@ extra-doc-files:
     CONTRIBUTING.md
     README.md
 
+extra-source-files:
+    test/golden/UnitTests.testFive.PASSED.tix.golden
+    test/golden/UnitTests.testFive'.PASSED.tix.golden
+    test/golden/UnitTests.testFour.FAILED.tix.golden
+    test/golden/UnitTests.testOne.PASSED.tix.golden
+    test/golden/UnitTests.testThree.FAILED.tix.golden
+    test/golden/UnitTests.testTwo.PASSED.tix.golden
+    
+
 source-repository head
     type:     git
     location: git@github.com:BinderDavid/tasty-coverage.git
